@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Camello Ya: ¡Despacha el pedido!</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;800&display=swap">
+<style>
+:root{--bg:#F3F6F5;--surface:#fff;--ink:#12343B;--muted:#5B7377;--accent:#F2B33D;--accent-ink:#12343B;--ok:#1F8A5B;--bad:#D6452B;--line:#D3DEDC;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E2429;--surface:#17343B;--ink:#EAF2F0;--muted:#97B0B3;--line:#2A4B52}}
+:root[data-theme="dark"]{--bg:#0E2429;--surface:#17343B;--ink:#EAF2F0;--muted:#97B0B3;--line:#2A4B52}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:500 16px/1.4 "Bricolage Grotesque",system-ui,sans-serif;min-height:100vh}
+main{max-width:640px;margin:0 auto;padding:20px 16px 32px}
+h1{font-size:clamp(28px,7vw,40px);line-height:1.05;margin:0 0 8px;font-weight:800}
+p{margin:0 0 16px;color:var(--muted)}
+.hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-weight:800}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:16px}
+.bar i{display:block;height:100%;width:100%;background:var(--accent);transform-origin:left}
+.card{background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:20px;margin-bottom:16px}
+.req{font-size:clamp(20px,5vw,26px);font-weight:800;line-height:1.2;min-height:3.6em}
+.who{color:var(--muted);font-size:14px;margin-bottom:8px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+button{font:inherit;cursor:pointer;color:var(--ink);background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:12px;text-align:left;display:flex;gap:10px;align-items:center}
+button:hover{border-color:var(--ink)}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button .e{font-size:26px}
+.go{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:800;justify-content:center;font-size:18px;width:100%;padding:16px}
+.ok{border-color:var(--ok)!important;background:color-mix(in srgb,var(--ok) 20%,var(--surface))}
+.no{border-color:var(--bad)!important;background:color-mix(in srgb,var(--bad) 20%,var(--surface))}
+.big{font-size:56px;font-weight:800;line-height:1}
+.hide{display:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<section id="home">
+  <h1>Camello Ya: ¡despacha el pedido!</h1>
+  <p>Llegan clientes con un problema. Toca al profesional correcto antes de que se acabe el tiempo. Tienes 3 vidas de reputación.</p>
+  <div class="card"><div class="who">Récord</div><div class="big" id="best">0</div></div>
+  <button class="go" id="start">Empezar turno</button>
+</section>
+
+<section id="play" class="hide">
+  <div class="hud"><span>Puntos: <span id="score">0</span></span><span id="streak"></span><span id="lives"></span></div>
+  <div class="bar" aria-hidden="true"><i id="fill"></i></div>
+  <div class="card"><div class="who" id="who"></div><div class="req" id="req" aria-live="polite"></div></div>
+  <div class="grid" id="grid"></div>
+</section>
+
+<section id="end" class="hide">
+  <h1>Turno terminado</h1>
+  <div class="card"><div class="who">Tus puntos</div><div class="big" id="final">0</div><p id="msg" style="margin:12px 0 0"></p></div>
+  <button class="go" id="again" style="margin-bottom:12px">Jugar otra vez</button>
+  <a href="https://mabdavjess12.wixsite.com/camello-ya/reserva-online" target="_blank" rel="noopener" style="color:var(--ink)">Reservar un servicio real en Camello Ya</a>
+  <div class="card" style="margin-top:16px;text-align:center"><div class="who">Escanea con tu celular para reservar</div><div id="qr" style="width:190px;margin:8px auto 0;background:#fff;padding:10px;border-radius:12px"></div></div>
+</section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+const S=[
+{n:"Corte de cabello",e:"💈",q:["Tengo una boda el sábado y necesito un corte.","Mi cabello está enorme y quiero un cambio de look.","Quiero arreglarme la barba y el pelo hoy.","Necesito un corte rápido antes de mi entrevista."]},
+{n:"Plomería",e:"🔧",q:["Hay una fuga de agua bajo el lavaplatos.","El inodoro no deja de gotear.","Se tapó el desagüe de la ducha.","Sale agua por el techo del baño."]},
+{n:"Limpieza doméstica",e:"🧽",q:["Mi apartamento está patas arriba y llegan visitas.","Necesito limpieza profunda de la sala y la cocina.","No tengo tiempo de limpiar mi casa esta semana.","Quedó todo sucio después de la fiesta."]},
+{n:"Carpintería",e:"🪚",q:["La puerta del clóset se salió de su sitio.","Necesito un mueble a medida para la entrada.","Mi mesa de madera tiene una pata floja.","Quiero reparar los estantes de la biblioteca."]},
+{n:"Albañil",e:"🧱",q:["Necesito levantar un muro en el patio.","Hay una grieta grande en la pared de la cocina.","Quiero cambiar el piso de la terraza.","Tengo que construir un cuarto pequeño en la azotea."]},
+{n:"Cuidadora de niños",e:"🧸",q:["Mis hijos necesitan quién los cuide esta noche.","Tengo reunión y nadie puede quedarse con el bebé.","Busco apoyo después del colegio para mi niña.","Necesito alguien de confianza para jugar con mis hijos."]},
+{n:"Pintores",e:"🎨",q:["Quiero cambiar el color de la sala.","La pared tiene manchas de humedad y hay que pintarla.","Necesito pintar el apartamento antes de mudarme.","No sé qué color elegir para mi cuarto."]},
+{n:"Cuidadora de mascotas",e:"🐶",q:["Viajo el fin de semana y mi perro se queda solo.","Mi gato necesita compañía mientras trabajo.","Alguien que pasee a mi cachorro en las tardes.","Voy a estar fuera y tengo dos mascotas en casa."]}];
+const C=["Andrés","Carlos","Elena","Camila","Julián","Marta","Sofía","Diego"];
+const $=id=>document.getElementById(id);
+let score,lives,streak,cur,t0,dur,raf,locked,best=0;
+try{best=+localStorage.getItem("camelloBest")||0}catch(e){}
+$("best").textContent=best;
+function show(id){["home","play","end"].forEach(x=>$(x).classList.toggle("hide",x!==id))}
+function buildGrid(){
+  $("grid").innerHTML="";
+  S.forEach((s,i)=>{const b=document.createElement("button");b.innerHTML='<span class="e">'+s.e+'</span><span>'+s.n+'</span>';b.onclick=()=>pick(i,b);b.dataset.i=i;$("grid").appendChild(b)});
+}
+function start(){score=0;lives=3;streak=0;buildGrid();show("play");hud();next()}
+function hud(){$("score").textContent=score;$("lives").textContent="❤️".repeat(lives)+"🖤".repeat(3-lives);$("streak").textContent=streak>=3?"Racha ×"+streak:""}
+function next(){
+  locked=false;
+  [...$("grid").children].forEach(b=>b.className="");
+  cur=Math.floor(Math.random()*S.length);
+  const qs=S[cur].q;
+  $("who").textContent=C[Math.floor(Math.random()*C.length)]+" escribe:";
+  $("req").textContent="“"+qs[Math.floor(Math.random()*qs.length)]+"”";
+  dur=Math.max(2500,7000-score*40);t0=performance.now();
+  cancelAnimationFrame(raf);tick();
+}
+function tick(){
+  const r=1-(performance.now()-t0)/dur;
+  $("fill").style.transform="scaleX("+Math.max(r,0)+")";
+  if(r<=0&&!locked){return pick(-1)}
+  raf=requestAnimationFrame(tick);
+}
+function pick(i,btn){
+  if(locked)return;locked=true;cancelAnimationFrame(raf);
+  const good=i===cur,left=Math.max(0,1-(performance.now()-t0)/dur);
+  $("grid").children[cur].classList.add("ok");
+  if(good){streak++;score+=10+Math.round(left*10)+(streak>=3?5:0)}
+  else{streak=0;lives--;if(btn)btn.classList.add("no")}
+  hud();
+  setTimeout(()=>lives<=0?over():next(),good?450:900);
+}
+function over(){
+  $("final").textContent=score;
+  let nb=score>best;
+  if(nb){best=score;try{localStorage.setItem("camelloBest",best)}catch(e){}}
+  $("best").textContent=best;
+  $("msg").textContent=nb?"¡Nuevo récord! Tu reputación sube.":score>=100?"Buen turno. Los clientes quedaron contentos.":"Practica un poco más y vuelve a intentarlo.";
+  show("end");
+}
+$("start").onclick=start;$("again").onclick=start;
+try{const q=qrcode(0,"M");q.addData("https://mabdavjess12.wixsite.com/camello-ya/reserva-online");q.make();$("qr").innerHTML=q.createSvgTag({cellSize:4,margin:0,scalable:true})}catch(e){$("qr").parentNode.classList.add("hide")}
+</script>
+</body>
+</html>
